@@ -1,7 +1,6 @@
 import { AuthPageType } from "@/core/enum/auth/enum";
 import { useState } from "react";
 import { FormComponent } from "@/components/auth/FormComponent";
-import { authFormSchemaSignIn, authFormSchemaSignUp } from "@/lib/zod/auth-schema";
 
 export default function AuthForm() {
   const [authPageType, setAuthPageType] = useState<AuthPageType>(
@@ -19,7 +18,6 @@ export default function AuthForm() {
       text1="Don't have an account?"
       text2="Sign Up"
       pageType={AuthPageType.signIn}
-      schemaValidation={authFormSchemaSignIn}
     />
   ) : (
     <FormComponent
@@ -32,7 +30,6 @@ export default function AuthForm() {
       text1="Already have an account?"
       text2="Sign in"
       pageType={AuthPageType.signUp}
-      schemaValidation={authFormSchemaSignUp}
     />
   );
 }
