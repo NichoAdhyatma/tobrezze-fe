@@ -15,7 +15,7 @@ export default function SignOut() {
 
   return (
     <form>
-      <Button variant="destructive" formAction={logout} > 
+      <Button size={"sm"} variant={"destructive"} formAction={logout} > 
         Sign out
       </Button>
     </form>
