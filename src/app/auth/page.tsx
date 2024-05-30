@@ -7,9 +7,21 @@ import GoogleIcon from "@/assets/google.png";
 import GithubIcon from "@/assets/github.png";
 import AuthForm from "@/components/auth/AuthForm";
 import { useRouter } from "next/navigation";
+import { createSupabaseClientSide } from "@/lib/supabase/supabase-client-side";
 
 export default function Home() {
   const router = useRouter();
+
+  const supabase = createSupabaseClientSide();
+
+  const signInWithGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: "http://localhost:3000/api/auth/callback",
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col justify-center items-center h-[75vh] gap-10">
@@ -27,6 +39,7 @@ export default function Home() {
 
         <Button
           variant={"outline"}
+          onClick={signInWithGoogle}
           icon={
             <Image
               width={20}
@@ -49,7 +62,6 @@ export default function Home() {
               alt={"Google Icon"}
             />
           }
-          
         >
           <span>Continue with Github</span>
         </Button>

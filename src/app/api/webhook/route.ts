@@ -1,25 +1,34 @@
 import Stripe from "stripe";
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 
 const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET ?? "");
 
-export async function POST(req: NextRequest, res: NextResponse) {
-  const payload = await req.text();
-  const response = JSON.parse(payload);
-
-  const sig = req.headers.get("Stripe=Signature");
-
+export async function POST(req: Request) {
   try {
-    let event = stripe.webhooks.constructEvent(
-      payload,
-      sig!,
+    const body = await req.text();
+
+    const signature = headers().get("stripe-signature");
+
+    const event = stripe.webhooks.constructEvent(
+      body,
+      signature!,
       process.env.NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET!
     );
 
-    console.log("event", event.type);
+    if (event.type === "invoice.payment_succeeded") {
+      console.log("🚀🔥 Customer ID stripe-webhook : ", event.data.object.customer);
+    }
 
-    return NextResponse.json({ status: "success", event: event.type });
+    return NextResponse.json({ result: event, ok: true });
   } catch (error) {
-    return NextResponse.json({ status: "Failed", error });
+    console.error(error);
+    return NextResponse.json(
+      {
+        message: "something went wrong",
+        ok: false,
+      },
+      { status: 500 }
+    );
   }
 }

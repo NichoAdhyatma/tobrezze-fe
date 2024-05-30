@@ -1,11 +1,12 @@
-'use client';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import styles from './pricing.module.css';
+"use client";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import styles from "./pricing.module.css";
 
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { handlePayment } from "@/app/action";
 
 export interface PricingTierFrequency {
   id: string;
@@ -29,22 +30,31 @@ export interface PricingTier {
 }
 
 export const frequencies: PricingTierFrequency[] = [
-  { id: '1', value: '1', label: 'Monthly', priceSuffix: '/month' },
+  { id: "1", value: "1", label: "Monthly", priceSuffix: "/month" },
 ];
 
 export const tiers: PricingTier[] = [
   {
-    name: 'Luxury member',
-    id: '0',
+    name: "Diamond MLBB 1000 (Monthly)",
+    id: "0",
     href: process.env.NEXT_PUBLIC_PAYMENT_LINK ?? "",
-    price: { '1': '$20' },
-    discountPrice: { '1': '' },
-    description: `Get all goodies for free, no credit card required.`,
-    features: [
-      `Multi-platform compatibility`,
-      `Real-time notification system`,
-      `Advanced user permissions`,
-    ],
+    price: { "1": "$10" },
+    discountPrice: { "1": "" },
+    description: `Get value more`,
+    features: [`Get 30 diamond Daily`, `25 % Safe`, `Special benefit bonuses`],
+    featured: false,
+    highlighted: false,
+    soldOut: false,
+    cta: `Subscribe`,
+  },
+  {
+    name: "Diamond MLBB 1000 (Monthly)",
+    id: "0",
+    href: process.env.NEXT_PUBLIC_PAYMENT_LINK ?? "",
+    price: { "1": "$10" },
+    discountPrice: { "1": "" },
+    description: `Get value more`,
+    features: [`Get 30 diamond Daily`, `25 % Safe`, `Special benefit bonuses`],
     featured: false,
     highlighted: false,
     soldOut: false,
@@ -58,7 +68,7 @@ const CheckIcon = ({ className }: { className?: string }) => {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="currentColor"
-      className={cn('w-6 h-6', className)}
+      className={cn("w-6 h-6", className)}
     >
       <path
         fillRule="evenodd"
@@ -69,154 +79,181 @@ const CheckIcon = ({ className }: { className?: string }) => {
   );
 };
 
-export default function PricingPage() {
+export default function PricingPage({ customerId }: { customerId: any }) {
   const [frequency, setFrequency] = useState(frequencies[0]);
+
+  const [isActive, setIsActive] = useState(false);
+
+  const isActiveSubscription = async (customerId: any) => {
+    const response = await fetch("/api/active", {
+      method: "POST",
+      body: JSON.stringify({ customerId: customerId.customer_id }),
+    });
+
+    const json = await response.json();
+
+    console.log(json);
+
+    setIsActive(json.isActive);
+  };
+
+  useEffect(() => {
+    isActiveSubscription(customerId);
+  }, [customerId]);
 
   const tier = tiers[0];
   const bannerText = "Save 25%";
 
   return (
-    <div
-      className={cn('flex flex-col w-full items-center', styles.fancyOverlay)}
-    >
-      <div className="w-full flex flex-col items-center mb-24">
-        <div className="mx-auto max-w-7xl px-6 xl:px-8">
-          <div className="mx-auto max-w-2xl sm:text-center">
-            <h1 className="text-black dark:text-white text-4xl font-semibold max-w-xs sm:max-w-none md:text-6xl !leading-tight">
-              Pricing
-            </h1>
-            <p className="text-black dark:text-white mt-6 md:text-xl max-w-prose">
-              Best Plan Subscription
-            </p>
-          </div>
-
-          {bannerText ? (
-            <div className="flex justify-center my-4">
-              <p className="px-4 py-3 text-xs bg-sky-100 text-black dark:bg-sky-300/30 dark:text-white/80 rounded-xl">
-                {bannerText}
-              </p>
-            </div>
-          ) : null}
-
-          {frequencies.length > 1 ? (
-            <div className="mt-16 flex justify-center">
-              <RadioGroup
-                defaultValue={frequency.value}
-                onValueChange={(value: string) => {
-                  setFrequency(frequencies.find((f) => f.value === value)!);
-                }}
-                className="grid gap-x-1 rounded-full p-1 text-center text-xs font-semibold leading-5 bg-white dark:bg-black ring-1 ring-inset ring-gray-200/30 dark:ring-gray-800"
-                style={{
-                  gridTemplateColumns: `repeat(${frequencies.length}, minmax(0, 1fr))`,
-                }}
-              >
-                <Label className="sr-only">Payment frequency</Label>
-                {frequencies.map((option) => (
-                  <Label
-                    className={cn(
-                      frequency.value === option.value
-                        ? 'bg-sky-500/90 text-white dark:bg-sky-900/70 dark:text-white/70'
-                        : 'bg-transparent text-gray-500 hover:bg-sky-500/10',
-                      'cursor-pointer rounded-full px-2.5 py-2 transition-all',
-                    )}
-                    key={option.value}
-                    htmlFor={option.value}
-                  >
-                    {option.label}
-
-                    <RadioGroupItem
-                      value={option.value}
-                      id={option.value}
-                      className="hidden"
-                    />
-                  </Label>
-                ))}
-              </RadioGroup>
-            </div>
-          ) : (
-            <div className="mt-12" aria-hidden="true"></div>
+    <>
+      {isActive ? <Button fullWidth={false} variant={'outline'}>Activated Subscription ✅</Button> : (
+        <div
+          className={cn(
+            "flex flex-col w-full items-center",
+            styles.fancyOverlay
           )}
-
-          <div className="flex flex-wrap xl:flex-nowrap items-center bg-white dark:bg-gray-900/80 backdrop-blur-md mx-auto mt-4 max-w-2xl rounded-3xl ring-1 ring-gray-300/70 dark:ring-gray-700 xl:mx-0 xl:flex xl:max-w-none">
-            <div className="p-8 sm:p-10 xl:flex-auto">
-              <h3 className="text-black dark:text-white text-2xl font-bold tracking-tight">{tier.name}</h3>
-              <p className="mt-6 text-base leading-7 text-gray-700 dark:text-gray-400">
-                {tier.description}
-              </p>
-              <div className="mt-12 flex items-center gap-x-4">
-                <h4 className="flex-none text-sm font-semibold leading-6 text-black dark:text-white">
-                  Included features
-                </h4>
-                <div className="h-px flex-auto bg-gray-100 dark:bg-gray-700" />
+        >
+          <div className="w-full flex flex-col items-center mb-24">
+            <div className="mx-auto max-w-7xl px-6 xl:px-8">
+              <div className="mx-auto max-w-2xl sm:text-center">
+                <h1 className="text-black dark:text-white text-4xl font-semibold max-w-xs sm:max-w-none md:text-6xl !leading-tight">
+                  Pricing
+                </h1>
+                <p className="text-black dark:text-white mt-6 md:text-xl max-w-prose">
+                  Best Plan Subscription
+                </p>
               </div>
 
-              <ul className="mt-10 grid grid-cols-1 gap-4 text-sm leading-6 text-gray-700 dark:text-gray-400">
-                {tier.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-x-2 text-sm"
-                  >
-                    <CheckIcon
-                      className="h-6 w-6 flex-none text-sky-500"
-                      aria-hidden="true"
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="-mt-2 p-2 xl:pr-8 xl:mt-0 w-full xl:max-w-md xl:flex-shrink-0">
-              <div
-                className={cn(
-                  'rounded-2xl py-10 text-center ring-1 ring-inset ring-gray-300/50 dark:ring-gray-800/50 xl:flex xl:flex-col xl:justify-center xl:py-16',
-                  styles.fancyGlass,
-                )}
-              >
-                <div className="mx-auto max-w-xs px-8">
-                  <p className="mt-6 flex items-baseline justify-center gap-x-2">
-                    <span
-                      className={cn(
-                        'text-5xl font-bold tracking-tight text-black dark:text-white',
-                        tier.discountPrice &&
-                          tier.discountPrice[
-                            frequency.value as keyof typeof tier.discountPrice
-                          ]
-                          ? 'line-through'
-                          : '',
-                      )}
-                    >
-                      {typeof tier.price === 'string'
-                        ? tier.price
-                        : tier.price[frequency.value]}
-                    </span>
-
-                    <span>
-                      {typeof tier.discountPrice === 'string'
-                        ? tier.discountPrice
-                        : tier.discountPrice[frequency.value]}
-                    </span>
-
-                    <span className="text-sm font-semibold leading-6 tracking-wide text-gray-700 dark:text-gray-400">
-                      {frequency.priceSuffix}
-                    </span>
+              {bannerText ? (
+                <div className="flex justify-center my-4">
+                  <p className="px-4 py-3 text-xs bg-sky-100 text-black dark:bg-sky-300/30 dark:text-white/80 rounded-xl">
+                    {bannerText}
                   </p>
-                  <a
-                    href={tier.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex justify-center mt-8 flex-shrink-0"
+                </div>
+              ) : null}
+
+              {frequencies.length > 1 ? (
+                <div className="mt-16 flex justify-center">
+                  <RadioGroup
+                    defaultValue={frequency.value}
+                    onValueChange={(value) => {
+                      setFrequency(frequencies.find((f) => f.value === value)!);
+                    }}
+                    className="grid gap-x-1 rounded-full p-1 text-center text-xs font-semibold leading-5 bg-white dark:bg-black ring-1 ring-inset ring-gray-200/30 dark:ring-gray-800"
+                    style={{
+                      gridTemplateColumns: `repeat(${frequencies.length}, minmax(0, 1fr))`,
+                    }}
                   >
-                    <Button size="lg">{tier.cta}</Button>
-                  </a>
-                  <p className="mt-2 text-xs leading-5 text-gray-700 dark:text-gray-400">
-                    Sign up in seconds, no credit card required.
+                    <Label className="sr-only">Payment frequency</Label>
+                    {frequencies.map((option) => (
+                      <Label
+                        className={cn(
+                          frequency.value === option.value
+                            ? "bg-sky-500/90 text-white dark:bg-sky-900/70 dark:text-white/70"
+                            : "bg-transparent text-gray-500 hover:bg-sky-500/10",
+                          "cursor-pointer rounded-full px-2.5 py-2 transition-all"
+                        )}
+                        key={option.value}
+                        htmlFor={option.value}
+                      >
+                        {option.label}
+
+                        <RadioGroupItem
+                          value={option.value}
+                          id={option.value}
+                          className="hidden"
+                        />
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </div>
+              ) : (
+                <div className="mt-12" aria-hidden="true"></div>
+              )}
+
+              <div className="flex flex-wrap xl:flex-nowrap items-center bg-white dark:bg-gray-900/80 backdrop-blur-md mx-auto mt-4 max-w-2xl rounded-3xl ring-1 ring-gray-300/70 dark:ring-gray-700 xl:mx-0 xl:flex xl:max-w-none">
+                <div className="p-8 sm:p-10 xl:flex-auto">
+                  <h3 className="text-black dark:text-white text-2xl font-bold tracking-tight">
+                    {tier.name}
+                  </h3>
+                  <p className="mt-6 text-base leading-7 text-gray-700 dark:text-gray-400">
+                    {tier.description}
                   </p>
+                  <div className="mt-12 flex items-center gap-x-4">
+                    <h4 className="flex-none text-sm font-semibold leading-6 text-black dark:text-white">
+                      Included features
+                    </h4>
+                    <div className="h-px flex-auto bg-gray-100 dark:bg-gray-700" />
+                  </div>
+
+                  <ul className="mt-10 grid grid-cols-1 gap-4 text-sm leading-6 text-gray-700 dark:text-gray-400">
+                    {tier.features.map((feature) => (
+                      <li
+                        key={feature}
+                        className="flex items-center gap-x-2 text-sm"
+                      >
+                        <CheckIcon
+                          className="h-6 w-6 flex-none text-sky-500"
+                          aria-hidden="true"
+                        />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="-mt-2 p-2 xl:pr-8 xl:mt-0 w-full xl:max-w-md xl:flex-shrink-0">
+                  <div
+                    className={cn(
+                      "rounded-2xl py-10 text-center ring-1 ring-inset ring-gray-300/50 dark:ring-gray-800/50 xl:flex xl:flex-col xl:justify-center xl:py-16",
+                      styles.fancyGlass
+                    )}
+                  >
+                    <div className="mx-auto max-w-xs px-8">
+                      <p className="mt-6 flex items-baseline justify-center gap-x-2">
+                        <span
+                          className={cn(
+                            "text-5xl font-bold tracking-tight text-black dark:text-white",
+                            tier.discountPrice &&
+                              tier.discountPrice[
+                                frequency.value as keyof typeof tier.discountPrice
+                              ]
+                              ? "line-through"
+                              : ""
+                          )}
+                        >
+                          {typeof tier.price === "string"
+                            ? tier.price
+                            : tier.price[frequency.value]}
+                        </span>
+
+                        <span>
+                          {typeof tier.discountPrice === "string"
+                            ? tier.discountPrice
+                            : tier.discountPrice[frequency.value]}
+                        </span>
+
+                        <span className="text-sm font-semibold leading-6 tracking-wide text-gray-700 dark:text-gray-400">
+                          {frequency.priceSuffix}
+                        </span>
+                      </p>
+
+                      <Button
+                        className="my-4"
+                        size="lg"
+                        
+                      >
+                        {tier.cta}
+                      </Button>
+
+                      <p>Get value more and more</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
